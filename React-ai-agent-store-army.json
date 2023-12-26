@@ -1,0 +1,199 @@
+import * as React from "react";
+
+function MainComponent() {
+  const [aiAgents, setAiAgents] = React.useState([
+    {
+      id: 1,
+      title: "Manager AI Agent",
+      description: "Manages the web page store.",
+      price: 50,
+      img: "manager-agent.png",
+    },
+    {
+      id: 2,
+      title: "Security AI Agent",
+      description: "Ensures platform security.",
+      price: 40,
+      img: "security-agent.png",
+    },
+    {
+      id: 3,
+      title: "Marketing AI Agent",
+      description: "Drives marketing and sales.",
+      price: 45,
+      img: "marketing-agent.png",
+    },
+    {
+      id: 4,
+      title: "Accounts AI Agent",
+      description: "Handles financial accounting.",
+      price: 55,
+      img: "accounts-agent.png",
+    },
+    {
+      id: 5,
+      title: "Algorithm and Logic AI Agent",
+      description: "Optimizes product finding and listing.",
+      price: 35,
+      img: "algorithm-agent.png",
+    },
+    {
+      id: 6,
+      title: "Coding AI Agent",
+      description: "Enhances and optimizes code.",
+      price: 60,
+      img: "coding-agent.png",
+    },
+    {
+      id: 7,
+      title: "Performance Operations AI Agent",
+      description: "Improves operations and processing.",
+      price: 50,
+      img: "performance-agent.png",
+    },
+    {
+      id: 8,
+      title: "Writing AI Agent",
+      description: "Crafts product descriptions.",
+      price: 30,
+      img: "writing-agent.png",
+    },
+    {
+      id: 9,
+      title: "Customer Assistant AI Agent",
+      description: "Assists customers and manages accounts.",
+      price: 40,
+      img: "customer-assistant-agent.png",
+    },
+    {
+      id: 10,
+      title: "Funds Management AI Agent",
+      description: "Manages sales and fund transactions.",
+      price: 55,
+      img: "funds-agent.png",
+    },
+    {
+      id: 11,
+      title: "Competition Evaluation AI Agent",
+      description: "Evaluates and adapts to competition.",
+      price: 45,
+      img: "competition-agent.png",
+    },
+    {
+      id: 12,
+      title: "Self-improvement AI Agent",
+      description: "Manages updates and self-enhancements.",
+      price: 60,
+      img: "self-improvement-agent.png",
+    },
+  ]);
+  const [notification, setNotification] = React.useState("");
+  React.useEffect(() => {
+    aiAgents.forEach((agent) => {
+      handlePurchase(agent, true);
+    });
+  }, []);
+  const handlePurchase = async (agent, isTrial = false, discountCode = "") => {
+    let price = agent.price;
+    if (
+      discountCode ===
+      "1FreeAi" + agent.title.replace(/\s+AI\s+Agent$/gi, "")
+    ) {
+      price = 0;
+    } else if (discountCode === "+20%off") {
+      price *= 0.8;
+    }
+    const purchaseResult = isTrial
+      ? { ok: true }
+      : await fetch(
+          `https://payment.processor.com/purchase?agentId=${agent.id}&price=${price}`,
+          {
+            method: "POST",
+          }
+        );
+    if (purchaseResult.ok) {
+      setNotification(
+        isTrial
+          ? `Trial for ${agent.title} activated for 48 hours.`
+          : `${agent.title} purchased for $${price.toFixed(2)}.`
+      );
+      sendSMS(
+        isTrial
+          ? `Trial of ${agent.title} initiated.`
+          : `Product sold: ${agent.title} for $${price.toFixed(2)}.`
+      );
+    } else {
+      setNotification(`Failed to purchase ${agent.title}.`);
+      sendSMS(`Sale of ${agent.title} failed.`);
+    }
+    if (isTrial) {
+      setTimeout(
+        () => sendSMS(`Trial of ${agent.title} has ended.`),
+        172800000
+      );
+    }
+  };
+  const sendSMS = (message) => {
+    fetch("https://messenger.service.example.com/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: "REDACTED_NUMBER", message }),
+    });
+  };
+  const renderAgent = (agent) => (
+    <div
+      key={agent.id}
+      className="bg-white p-4 border rounded-lg shadow-md flex flex-col mb-6"
+    >
+      {agent.img ? (
+        <img
+          src={`./assets/${agent.img}`}
+          alt={`${agent.title} electronic component`}
+          className="max-h-24 rounded-lg mb-4"
+        />
+      ) : null}
+      <h2 className="text-xl font-roboto font-semibold mb-2">{agent.title}</h2>
+      <p className="font-roboto">{agent.description}</p>
+      <div className="flex flex-col space-y-2 mt-4">
+        <span className="font-roboto">${agent.price.toFixed(2)}</span>
+        <div className="flex space-x-2 items-end">
+          <input
+            type="text"
+            name="discount"
+            placeholder="Discount Code"
+            className="font-roboto text-lg p-2 border rounded w-[120px] h-[48px]"
+          />
+          <button
+            onClick={(e) =>
+              handlePurchase(agent, false, e.target.form.discount.value)
+            }
+            className="bg-blue-500 px-4 py-2 rounded text-white"
+          >
+            Buy
+          </button>
+        </div>
+        <button
+          onClick={() => handlePurchase(agent, true)}
+          className="bg-green-500 px-4 py-2 rounded text-white"
+        >
+          Trial
+        </button>
+      </div>
+    </div>
+  );
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <header className="text-3xl font-roboto font-bold my-10">
+        <h1>AI Agents Webstore</h1>
+      </header>
+      <main className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+        {aiAgents.map((agent) => renderAgent(agent))}
+      </main>
+      {notification && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-3 rounded">
+          {notification}
+        </div>
+      )}
+    </div>
+  );
+}
